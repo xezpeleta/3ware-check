@@ -212,7 +212,7 @@ def main():
   if Utils.hardwareDetected():
     logging.debug('3ware hardware detected')
   else:
-    logging.error('3ware hardare not detected')
+    logging.error('3ware hardware not detected')
     sys.exit()
 
   # Software detection
@@ -231,15 +231,20 @@ def main():
     for u in units:
       logging.debug('Unit: ' + u.getName())
       ports = u.getPorts()
+      status = 'ok'
       for p in ports:
         pname = p.getName()
         rasect = p.getReallocatedSectors()
         pohrs = p.getPowerOnHours()
         logging.debug('Port %s: %i/%i' % (pname, rasect, pohrs))
         if rasect > 10:
+          status = 'critical'
           print 'CRITICAL Disk %s Reallocated Sectors: %i' % (pname, rasect)
         elif rasect > 0:
+          status = 'warning'
           print 'WARNING Disk %s Reallocated Sectors: %i' % (pname, rasect)
+  if status == 'ok':
+    print 'OK'
 
 if __name__ == "__main__":
   main()
