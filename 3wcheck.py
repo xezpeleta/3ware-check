@@ -28,24 +28,29 @@ class Utils:
 
   @staticmethod
   def softwareDetected():
+    # Trying with tw-cli
     p = subprocess.Popen(shlex.split('whereis tw-cli'), stdout=subprocess.PIPE)
     out, err = p.communicate()
     retcode = p.returncode
-    if len(out.split()) > 1:
-      path = out.split()[1]
-
-      if path != '':
-        # Sorry
-        global twcli
-        twcli = path
-        logging.debug('RAID software detected: ' + path)
-        return True
-      else:
-        logging.error('Software not detected ' + err + out)
+    if len(out.split()) < 2:
+      # Trying with tw_cli
+      p = subprocess.Popen(shlex.split('whereis tw_cli'), stdout=subprocess.PIPE)
+      out, err = p.communicate()
+      retcode = p.returncode
+      if len(out.split()) < 2:
+        logging.error('Software not detected')
         return False
-    else:
-      logging.error('Software not detected')
-      return False
+      else:
+        path = out.split()[1]
+        if path != '':
+          # Sorry
+          global twcli
+          twcli = path
+          logging.debug('RAID software detected: ' + path)
+          return True
+        else:
+          logging.error('Software not detected ' + err + out)
+          return False
 
   @staticmethod
   def removeHeaders(output):
@@ -69,7 +74,7 @@ class Utils:
     if retcode == 0:
       return out
     else:
-      logging.error('ERROR: ' + err)
+      logging.error('ERROR: ' + str(err))
 
     return cmdoutput
 
@@ -196,16 +201,17 @@ class Raid:
           rasect = None
           pname = self.name
           output = Utils.parseCommand('/' + self.controller + '/' + pname + ' show rasect')
-          rasect = int(output.split('=')[1].strip())
-          # rasect > 0   # WARNING
-          # rasect > 10  # CRITICAL
+          if isinstance(output, str):
+            rasect = int(output.split('=')[1].strip())
           return rasect
+
 
         def getPowerOnHours(self):
           pohrs = 0
           pname = self.name
           output = Utils.parseCommand('/' + self.controller + '/' + pname + ' show pohrs')
-          pohrs = int(output.split('=')[1].strip())
+          if isinstance(output, str):
+            pohrs = int(output.split('=')[1].strip())
           return pohrs
 
 
