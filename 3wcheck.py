@@ -31,16 +31,20 @@ class Utils:
     p = subprocess.Popen(shlex.split('whereis tw-cli'), stdout=subprocess.PIPE)
     out, err = p.communicate()
     retcode = p.returncode
-    path = out.split()[1]
+    if len(out.split()) > 1:
+      path = out.split()[1]
 
-    if path != '':
-      # Sorry
-      global twcli
-      twcli = path
-      logging.debug('RAID software detected: ' + path)
-      return True
+      if path != '':
+        # Sorry
+        global twcli
+        twcli = path
+        logging.debug('RAID software detected: ' + path)
+        return True
+      else:
+        logging.error('Software not detected ' + err + out)
+        return False
     else:
-      logging.error('Software not detected ' + err + out)
+      logging.error('Software not detected')
       return False
 
   @staticmethod
