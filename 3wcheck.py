@@ -216,14 +216,14 @@ def main():
   if Utils.hardwareDetected():
     logging.debug('3ware hardware detected')
   else:
-    logging.error('3ware hardware not detected')
+    print('ERROR: 3ware hardware not detected')
     sys.exit()
 
   # Software detection
   if Utils.softwareDetected():
     logging.debug('3ware software detected')
   else:
-    logging.error('3ware software not detected')
+    print('ERROR: 3ware software not detected')
     sys.exit()
 
   # Raid controller detection
@@ -243,10 +243,10 @@ def main():
         logging.debug('Port %s: %i/%i' % (pname, rasect, pohrs))
         if rasect > 10:
           status = 'critical'
-          print 'CRITICAL Disk %s Reallocated Sectors: %i' % (pname, rasect)
+          print 'CRITICAL: Disk %s Reallocated Sectors: %i' % (pname, rasect)
         elif rasect > 0:
           status = 'warning'
-          print 'WARNING Disk %s Reallocated Sectors: %i' % (pname, rasect)
+          print 'WARNING: Disk %s Reallocated Sectors: %i' % (pname, rasect)
   if status == 'ok':
     print 'OK'
 
