@@ -89,7 +89,7 @@ class Raid:
       if line is not '':
         cname = line.split()[0]
         if len(self.controllers) > 0:
-          if getController(cname) is None:
+          if self.getController(cname) is None:
             self.controllers.append(Raid.Controller(cname))
         else:
           self.controllers.append(Raid.Controller(cname))
@@ -130,7 +130,7 @@ class Raid:
         if line is not '':
           uname = line.split()[0]
           if len(self.units) > 0:
-            if getUnit(uname) is None:
+            if self.getUnit(uname) is None:
               self.units.append(Raid.Controller.Unit(c, uname))
           else:
             self.units.append(Raid.Controller.Unit(c, uname))
