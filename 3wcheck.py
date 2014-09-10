@@ -166,8 +166,7 @@ class Raid:
 
       def getPorts(self):
         c = Raid.Controller(self.controller)
-        # FIX IT, c0 hardcoded :S
-        output = Utils.parseCommand('/' + 'c0' + ' show')
+        output = Utils.parseCommand('/' + self.controller + ' show')
         output = Utils.removeHeaders(output)
         for line in output:
           if len(line.split()) > 2 and line.split()[2] == self.getName():
