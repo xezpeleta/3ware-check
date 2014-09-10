@@ -237,14 +237,14 @@ def main():
     logging.debug('3ware hardware detected')
   else:
     print('ERROR: 3ware hardware not detected')
-    sys.exit()
+    sys.exit(1)
 
   # Software detection
   if Utils.softwareDetected():
     logging.debug('3ware software detected')
   else:
     print('ERROR: 3ware software not detected')
-    sys.exit()
+    sys.exit(2)
 
   # Raid controller detection
   r = Raid()
@@ -262,7 +262,8 @@ def main():
         pohrs = p.getPowerOnHours()
         if rasect is False:
           status = 'unknown'
-          print '\nUNKNOWN: RAID not compatible'
+          print 'UNKNOWN: RAID not compatible'
+          sys.exit(3)
         if rasect > 10:
           status = 'critical'
           print 'CRITICAL: Disk %s Reallocated Sectors: %i' % (pname, rasect)
