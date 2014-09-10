@@ -28,29 +28,30 @@ class Utils:
 
   @staticmethod
   def softwareDetected():
+    global twcli
     # Trying with tw-cli
     p = subprocess.Popen(shlex.split('whereis tw-cli'), stdout=subprocess.PIPE)
     out, err = p.communicate()
     retcode = p.returncode
-    if len(out.split()) < 2:
+    if len(out.split()) > 1:
+      path = out.split()[1]
+      if path != '':
+        twcli = path
+        logging.debug('RAID software detected: ' + path)
+        return True
+    else:
       # Trying with tw_cli
       p = subprocess.Popen(shlex.split('whereis tw_cli'), stdout=subprocess.PIPE)
       out, err = p.communicate()
       retcode = p.returncode
-      if len(out.split()) < 2:
-        logging.error('Software not detected')
-        return False
-      else:
+      if len(out.split()) > 1:
         path = out.split()[1]
         if path != '':
-          # Sorry
-          global twcli
           twcli = path
           logging.debug('RAID software detected: ' + path)
           return True
-        else:
-          logging.error('Software not detected ' + err + out)
-          return False
+    if twcli == '':
+      logging.error('RAID software not detected: ' + path)
 
   @staticmethod
   def removeHeaders(output):
