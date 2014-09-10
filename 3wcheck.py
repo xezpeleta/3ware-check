@@ -266,10 +266,10 @@ def main():
           sys.exit(3)
         if rasect > 10:
           status = 'critical'
-          print 'CRITICAL: Disk %s Reallocated Sectors: %i' % (pname, rasect)
+          print 'CRITICAL: Drive %s - Reallocated Sectors: %i' % (pname, rasect)
         elif rasect > 0:
           status = 'warning'
-          print 'WARNING: Disk %s Reallocated Sectors: %i' % (pname, rasect)
+          print 'WARNING: Drive %s - Reallocated Sectors: %i' % (pname, rasect)
   if status == 'ok':
     print 'OK'
 
