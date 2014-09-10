@@ -198,21 +198,34 @@ class Raid:
         def getName(self):
           return self.name
 
+        '''
+          getReallocatedSectors()
+            Returns reallocated sectors for the drive
+            Compatible with 9650SE and higher
+        '''
         def getReallocatedSectors(self):
           rasect = None
           pname = self.name
           output = Utils.parseCommand('/' + self.controller + '/' + pname + ' show rasect')
           if isinstance(output, str):
             rasect = int(output.split('=')[1].strip())
+          else:
+            rasect = False
           return rasect
 
-
+        '''
+          getPowerOnHours()
+            Returns the number of power on hours for the drive
+            Compatible with 9650SE and higher
+        '''
         def getPowerOnHours(self):
           pohrs = 0
           pname = self.name
           output = Utils.parseCommand('/' + self.controller + '/' + pname + ' show pohrs')
           if isinstance(output, str):
             pohrs = int(output.split('=')[1].strip())
+          else:
+            pohrs = False
           return pohrs
 
 
@@ -247,7 +260,9 @@ def main():
         pname = p.getName()
         rasect = p.getReallocatedSectors()
         pohrs = p.getPowerOnHours()
-        logging.debug('Port %s: %i/%i' % (pname, rasect, pohrs))
+        if rasect is False:
+          status = 'unknown'
+          print '\nUNKNOWN: RAID not compatible'
         if rasect > 10:
           status = 'critical'
           print 'CRITICAL: Disk %s Reallocated Sectors: %i' % (pname, rasect)
