@@ -20,10 +20,10 @@ class Utils:
     retcode = p2.returncode
 
     if retcode == 0:
-      logging.debug('RAID hardware detected: ' + out)
+      logging.debug('3ware hardware detected')
       return True
     else:
-      logging.error('Hardware detection error ' + err)
+      logging.error('3ware hardware detection error ' + err)
       return False
 
   @staticmethod
@@ -37,7 +37,7 @@ class Utils:
       path = out.split()[1]
       if path != '':
         twcli = path
-        logging.debug('RAID software detected: ' + path)
+        logging.debug('3ware software detected: ' + path)
         return True
     else:
       # Trying with tw_cli
@@ -48,10 +48,10 @@ class Utils:
         path = out.split()[1]
         if path != '':
           twcli = path
-          logging.debug('RAID software detected: ' + path)
+          logging.debug('3ware software detected: ' + path)
           return True
     if twcli == '':
-      logging.error('RAID software not detected: ' + path)
+      logging.error('3ware software not detected: ' + path)
 
   @staticmethod
   def removeHeaders(output):
@@ -68,7 +68,7 @@ class Utils:
   def parseCommand(param):
     cmdoutput = []
     p = subprocess.Popen(shlex.split(twcli + ' ' + param), stdout=subprocess.PIPE)
-    logging.debug('Exec: twcli ' + param)
+    #logging.debug('Exec: twcli ' + param)
     out, err = p.communicate()
     retcode = p.returncode
 
@@ -120,7 +120,13 @@ class Raid:
 
     def getModel(self):
       if self.model == '':
-        self.model = 'TODO'
+        output = Utils.parseCommand('show')
+        output = Utils.removeHeaders(output)
+        for line in output:
+          if line is not '':
+            if len(line.split()) > 2:
+              if line.split()[0] == self.name:
+                self.model = line.split()[1]
       return self.model
 
     def getUnits(self):
@@ -151,7 +157,7 @@ class Raid:
       name = ''
       utype = ''
       status = ''
-      size = 0
+      size = 0 #GB
       ports = []
       controller = ''
 
@@ -160,9 +166,28 @@ class Raid:
           self.name = uname
         if self.controller == '':
           self.controller = c.getName()
+        if self.utype == '' and self.status == '' and self.size == 0:
+          output = Utils.parseCommand('/' + self.controller + '/' + self.name + ' show')
+          output = Utils.removeHeaders(output)
+          for line in output:
+            if len(line.split()) > 7:
+              if line.split()[0] == self.name:
+                self.utype = line.split()[1]
+                self.status = line.split()[2]
+                self.size = float(line.split()[7])
+                logging.debug('Unit %s: Type=%s | Status=%s | Size=%i' % (self.name, self.utype, self.status, self.size))
 
       def getName(self):
         return self.name
+
+      def getUtype(self):
+        return self.utype
+
+      def getStatus(self):
+        return self.status
+
+      def getSize(self):
+        return self.size
 
       def getPorts(self):
         c = Raid.Controller(self.controller)
@@ -193,9 +218,32 @@ class Raid:
             self.name = pname
           if self.controller == '':
             self.controller = c.getName()
+          if self.status == '' and self.size == 0 and self.serial == '' and self.unit == '':
+            output = Utils.parseCommand('/' + self.controller + '/' + self.name + ' show')
+            output = Utils.removeHeaders(output)
+            for line in output:
+              if line is not '':
+                if len(line.split()) > 4 and line.split()[0] == self.name:
+                  self.status = line.split()[1]
+                  self.unit = line.split()[2]
+                  self.size = float(line.split()[3])
+                  self.serial = line.split()[6]
+                  logging.debug('Port %s: Status=%s | Size=%i | Serial=%s | Unit=%s' % (self.name, self.status, self.size, self.serial, self.unit))
 
         def getName(self):
           return self.name
+
+        def getStatus(self):
+          return self.status
+
+        def getSize(self):
+          return self.size
+
+        def getSerial(self):
+          return self.serial
+
+        def getUnit(self):
+          return self.unit
 
         '''
           getReallocatedSectors()
@@ -232,16 +280,12 @@ twcli = None
 
 def main():
   # Hardware detection
-  if Utils.hardwareDetected():
-    logging.debug('3ware hardware detected')
-  else:
+  if not Utils.hardwareDetected():
     print('ERROR: 3ware hardware not detected')
     sys.exit(1)
 
   # Software detection
-  if Utils.softwareDetected():
-    logging.debug('3ware software detected')
-  else:
+  if not Utils.softwareDetected():
     print('ERROR: 3ware software not detected')
     sys.exit(2)
 
@@ -249,14 +293,11 @@ def main():
   r = Raid()
   controllers = r.getControllers()
   for c in controllers:
-    logging.debug('Controller: ' + c.getName())
     units = c.getUnits()
     for u in units:
-      logging.debug('Unit: ' + u.getName())
       ports = u.getPorts()
       status = 'ok'
       for p in ports:
-        pname = p.getName()
         rasect = p.getReallocatedSectors()
         pohrs = p.getPowerOnHours()
         if rasect is False:
@@ -265,10 +306,10 @@ def main():
           sys.exit(3)
         if rasect > 10:
           status = 'critical'
-          print 'CRITICAL: Drive %s - Reallocated Sectors: %i' % (pname, rasect)
+          print 'CRITICAL: Drive %s/%s/%s (Serial: %s | Size: %iGB) - Reallocated Sectors: %i' % (c.getName(), u.getName(), p.getName(), p.getSerial(), p.getSize(), rasect)
         elif rasect > 0:
           status = 'warning'
-          print 'WARNING: Drive %s - Reallocated Sectors: %i' % (pname, rasect)
+          print 'WARNING: Drive %s/%s/%s (Serial: %s | Size: %iGB) - Reallocated Sectors: %i' % (c.getName(), u.getName(), p.getName(), p.getSerial(), p.getSize(), rasect)
   if status == 'ok':
     print 'OK'
 
